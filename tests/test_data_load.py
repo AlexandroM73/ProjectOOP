@@ -1,5 +1,4 @@
 import json
-import pytest
 from src.data_load import load_data_from_json
 from main import Product, Category
 
@@ -8,6 +7,7 @@ def test_load_data_from_json_file_not_found():
     """Тест обработки ошибки отсутствия файла."""
     categories = load_data_from_json("nonexistent.json")
     assert categories == []
+
 
 def test_product_creation():
     """Тест создания объекта Product."""
@@ -18,6 +18,7 @@ def test_product_creation():
     assert isinstance(product.price, float)
     assert isinstance(product.quantity, int)
 
+
 def test_category_creation():
     """Тест создания объекта Category."""
     product = Product("Test Phone", "Test", 10000.0, 10)
@@ -26,6 +27,7 @@ def test_category_creation():
     assert category.description == "Test desc"
     assert len(category.products) == 1
     assert isinstance(category.products, list)
+
 
 def test_load_data_from_json_valid_old_format():
     """Тест загрузки данных в старом формате (с ключом 'categories')."""
@@ -57,6 +59,7 @@ def test_load_data_from_json_valid_old_format():
     assert isinstance(categories[0].products[0], Product)
     assert categories[0].products[0].name == "Samsung Galaxy S23 Ultra"
 
+
 def test_load_data_from_json_valid_new_format():
     """Тест загрузки данных в новом формате (массив категорий)."""
     data = [
@@ -66,9 +69,9 @@ def test_load_data_from_json_valid_new_format():
             "products": [
                 {
                     "name": "MacBook Pro 16",
-            "description": "M2 Pro, 1TB SSD",
-            "price": 250000.0,
-            "quantity": 3
+                    "description": "M2 Pro, 1TB SSD",
+                    "price": 250000.0,
+                    "quantity": 3
                 }
             ]
         }
@@ -81,6 +84,7 @@ def test_load_data_from_json_valid_new_format():
     assert len(categories) == 1
     assert categories[0].name == "Ноутбуки"
     assert len(categories[0].products) == 1
+
 
 def test_load_data_from_json_missing_category_fields():
     """Тест обработки категорий с отсутствующими обязательными полями."""
@@ -103,6 +107,7 @@ def test_load_data_from_json_missing_category_fields():
     categories = load_data_from_json("test_missing_categories.json")
     assert len(categories) == 0
 
+
 def test_load_data_from_json_missing_product_fields():
     """Тест обработки товаров с отсутствующими обязательными полями."""
     data = {
@@ -112,10 +117,10 @@ def test_load_data_from_json_missing_product_fields():
                 "description": "Категория для тестирования",
                 "products": [
                     {"name": "Товар без полей"},  # Отсутствуют price, quantity, description
-            {
-                "price": 1000.0,
-                "quantity": 5
-            }  # Отсутствуют name, description
+                    {
+                        "price": 1000.0,
+                        "quantity": 5
+                    }  # Отсутствуют name, description
                 ]
             }
         ]
@@ -128,6 +133,7 @@ def test_load_data_from_json_missing_product_fields():
     assert len(categories) == 1
     assert len(categories[0].products) == 0
 
+
 def test_load_data_from_json_empty_file():
     """Тест обработки пустого JSON‑файла."""
     with open("test_empty.json", "w") as f:
@@ -136,6 +142,7 @@ def test_load_data_from_json_empty_file():
     categories = load_data_from_json("test_empty.json")
     assert categories == []
 
+
 def test_load_data_from_json_invalid_json():
     """Тест обработки некорректного JSON."""
     with open("test_invalid.json", "w") as f:
@@ -143,6 +150,7 @@ def test_load_data_from_json_invalid_json():
 
     categories = load_data_from_json("test_invalid.json")
     assert categories == []
+
 
 def test_load_data_from_json_multiple_categories():
     """Тест загрузки нескольких категорий."""
@@ -154,10 +162,10 @@ def test_load_data_from_json_multiple_categories():
                 "products": [
                     {
                         "name": "Товар 1",
-                "price": 100.0,
-                "quantity": 1,
-                "description": "Описание товара 1"
-            }
+                        "price": 100.0,
+                        "quantity": 1,
+                        "description": "Описание товара 1"
+                    }
                 ]
             },
             {
@@ -166,10 +174,10 @@ def test_load_data_from_json_multiple_categories():
                 "products": [
                     {
                         "name": "Товар 2",
-                "price": 200.0,
-                "quantity": 2,
-                "description": "Описание товара 2"
-            }
+                        "price": 200.0,
+                        "quantity": 2,
+                        "description": "Описание товара 2"
+                    }
                 ]
             }
         ]
@@ -184,6 +192,7 @@ def test_load_data_from_json_multiple_categories():
     assert len(categories[0].products) == 1
     assert len(categories[1].products) == 1
 
+
 def test_load_data_from_json_price_conversion():
     """Тест преобразования цены в float (из int и str)."""
     data = {
@@ -193,17 +202,17 @@ def test_load_data_from_json_price_conversion():
                 "description": "Тестирование типов цен",
                 "products": [
                     {
-                "name": "Цена как int",
-                "price": 1000,  # int
-                "quantity": 1,
-                "description": "Тест"
-            },
-            {
-                "name": "Цена как строка",
-                "price": "2000.50",  # str
-                "quantity": 1,
-                "description": "Тест"
-            }
+                        "name": "Цена как int",
+                        "price": 1000,  # int
+                        "quantity": 1,
+                        "description": "Тест"
+                    },
+                    {
+                        "name": "Цена как строка",
+                        "price": "2000.50",  # str
+                        "quantity": 1,
+                        "description": "Тест"
+                    }
                 ]
             }
         ]

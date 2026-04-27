@@ -90,6 +90,6 @@ if __name__ == "__main__":
                   )
 
     # Проверяем счётчики
-    print(f"\n === ИТОГОВЫЕ СЧЁТЧИКИ ===")
+    print("\n === ИТОГОВЫЕ СЧЁТЧИКИ ===")
     print(f"Всего категорий: {Category.category_count}")
     print(f"Всего товаров: {Category.product_count}")
