@@ -8,16 +8,23 @@ def main():
     categories = load_data_from_json("data/products.json")
 
     # Вывод результатов
-    print("\n === ИТОГОВЫЕ СЧЁТЧИКИ ===")
+    print("\n=== ИТОГОВЫЕ СЧЁТЧИКИ ===")
     print(f"Всего категорий: {len(categories)}")
-    total_products = sum(len(cat.products) for cat in categories)
+
+    total_products = 0
+    for category in categories:
+        # Считаем количество товаров в категории через вспомогательный метод
+        total_products += category.get_product_count()
+
     print(f"Всего товаров: {total_products}")
 
     for category in categories:
         print(f"\nКатегория: {category.name}")
         print(f"Описание: {category.description}")
-        for product in category.products:
-            print(f"  - {product.name}: {product.price} руб. ({product.quantity} шт.)")
+
+        # Используем геттер products — он возвращает строку с форматированным списком
+        print("Товары:")
+        print(category.products)  # Выводим готовую строку от геттера
 
 
 if __name__ == "__main__":
