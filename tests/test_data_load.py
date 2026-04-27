@@ -1,6 +1,6 @@
 import json
 from src.data_load import load_data_from_json
-from main import Product, Category
+from src.models import Product, Category
 
 
 def test_load_data_from_json_file_not_found():
@@ -145,11 +145,13 @@ def test_load_data_from_json_empty_file():
 
 def test_load_data_from_json_invalid_json():
     """Тест обработки некорректного JSON."""
-    with open("test_invalid.json", "w") as f:
+    # Создаём файл с некорректным JSON в кодировке UTF-8
+    with open("test_invalid.json", "w", encoding="utf-8") as f:
         f.write("некорректный json {]")
 
     categories = load_data_from_json("test_invalid.json")
-    assert categories == []
+    assert categories == []  # Должен вернуть пустой список при ошибке
+
 
 
 def test_load_data_from_json_multiple_categories():

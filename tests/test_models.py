@@ -1,5 +1,5 @@
 import pytest
-from main import Product, Category
+from src.models import Product, Category
 
 
 class TestProduct:
