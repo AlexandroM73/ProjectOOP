@@ -1,26 +1,27 @@
+from src.data_load import load_data_from_json
+
+
 class Product:
     def __init__(self, name: str, description: str, price: float, quantity: int):
         self.name = name
         self.description = description
-        self.price = price
-        self.quantity = quantity
-
+        self.price = float(price)
+        self.quantity = int(quantity)
 
 
 class Category:
-    # Статические переменные для подсчёта количества категорий и товаров
+    # Атрибуты класса — общие для всех объектов
     category_count = 0
     product_count = 0
 
     def __init__(self, name: str, description: str, products: list):
+        # Атрибуты объекта — уникальные для каждого экземпляра
         self.name = name
         self.description = description
         self.products = products
 
-        # Увеличиваем счётчик категорий при создании нового объекта
+        # Автоматическое обновление атрибутов класса
         Category.category_count += 1
-
-        # Увеличиваем счётчик товаров на количество товаров в текущей категории
         Category.product_count += len(products)
 
 
@@ -44,9 +45,15 @@ if __name__ == "__main__":
     print(product3.price)
     print(product3.quantity)
 
-    category1 = Category("Смартфоны",
-                         "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
-                         [product1, product2, product3])
+    description = (
+        "Смартфоны, как средство не только коммуникации, "
+        "но и получения дополнительных функций для удобства жизни"
+    )
+    category1 = Category(
+        "Смартфоны",
+        description,
+        [product1, product2, product3]
+    )
 
     print(category1.name == "Смартфоны")
     print(category1.description)
@@ -66,3 +73,23 @@ if __name__ == "__main__":
 
     print(Category.category_count)
     print(Category.product_count)
+
+    # Загружаем данные из JSON
+    categories = load_data_from_json("data/products.json")
+
+    # Выводим информацию о загруженных данных
+    for category in categories:
+        print(f"\nКатегория: {category.name}")
+        print(f"Описание: {category.description}")
+        print(f"Количество товаров: {len(category.products)}")
+        print("Товары:")
+        for product in category.products:
+            print(f"  - {product.name}: "
+                  f"{product.price} руб., "
+                  f"{product.quantity} шт."
+                  )
+
+    # Проверяем счётчики
+    print(f"\n === ИТОГОВЫЕ СЧЁТЧИКИ ===")
+    print(f"Всего категорий: {Category.category_count}")
+    print(f"Всего товаров: {Category.product_count}")

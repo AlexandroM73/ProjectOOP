@@ -1,0 +1,1 @@
+{"categories": [{"name": "Категория 1", "description": "Описание 1", "products": [{"name": "Товар 1", "price": 100.0, "quantity": 1, "description": "Описание товара 1"}]}, {"name": "Категория 2", "description": "Описание 2", "products": [{"name": "Товар 2", "price": 200.0, "quantity": 2, "description": "Описание товара 2"}]}]}
