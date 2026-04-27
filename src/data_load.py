@@ -1,6 +1,7 @@
 import json
 from .models import Product, Category
 
+
 def load_data_from_json(filename: str = "data/products.json") -> list:
     """Загружает данные из JSON‑файла и создаёт объекты Product и Category."""
     try:
@@ -22,25 +23,21 @@ def load_data_from_json(filename: str = "data/products.json") -> list:
                 for prod_data in cat_data['products']:
                     if all(key in prod_data for key in ['name', 'price', 'quantity']):
                         products.append(Product(
-            prod_data['name'],
-            prod_data.get('description', ''),
-            prod_data['price'],
-            prod_data['quantity']
-        ))
+                            prod_data['name'],
+                            prod_data.get('description', ''),
+                            prod_data['price'],
+                            prod_data['quantity']
+                        ))
                 categories.append(Category(
-        cat_data['name'],
-        cat_data['description'],
-        products
-    ))
+                    cat_data['name'],
+                    cat_data['description'],
+                    products
+                ))
 
         return categories
 
     except (FileNotFoundError, json.JSONDecodeError):
         return []
-
-
-
-
 
 # import json
 # from src.models import Product, Category

@@ -1,5 +1,6 @@
 from src.data_load import load_data_from_json
 
+
 def main():
     print("Запуск демонстрационного кода...")
 
@@ -7,11 +8,10 @@ def main():
     categories = load_data_from_json("data/products.json")
 
     # Вывод результатов
-    print(f"\n === ИТОГОВЫЕ СЧЁТЧИКИ ===")
+    print("\n === ИТОГОВЫЕ СЧЁТЧИКИ ===")
     print(f"Всего категорий: {len(categories)}")
     total_products = sum(len(cat.products) for cat in categories)
     print(f"Всего товаров: {total_products}")
-
 
     for category in categories:
         print(f"\nКатегория: {category.name}")
@@ -22,5 +22,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

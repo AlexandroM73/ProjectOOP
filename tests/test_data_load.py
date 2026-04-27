@@ -153,7 +153,6 @@ def test_load_data_from_json_invalid_json():
     assert categories == []  # Должен вернуть пустой список при ошибке
 
 
-
 def test_load_data_from_json_multiple_categories():
     """Тест загрузки нескольких категорий."""
     data = {
