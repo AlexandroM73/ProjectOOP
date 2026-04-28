@@ -102,6 +102,9 @@ class Product:
 
 
 class Category:
+    # Класс‑атрибут: счётчик всех продуктов во всех категориях
+    product_counter = 0
+
     def __init__(self, name: str, description: str, products: list = None):
         self.name = name
         self.description = description
@@ -112,17 +115,25 @@ class Category:
                 self.add_product(product)
 
     def add_product(self, product: Product):
-        """Добавляет продукт в категорию."""
+        """Добавляет продукт в категорию и обновляет счётчики."""
         if isinstance(product, Product):
             self.__products.append(product)
+            # Увеличиваем глобальный счётчик на 1
+            Category.product_counter += 1
         else:
             raise TypeError("Можно добавлять только объекты класса Product")
 
     @property
     def products(self) -> str:
-        """Геттер для списка товаров."""
+        """
+        Геттер для списка товаров (возвращает строку в формате:
+        "{name}, {price} руб. Остаток: {quantity} шт." для каждого товара,
+        разделённую переносами строк. Если товаров нет, возвращает
+        "В категории нет товаров."
+        """
         if not self.__products:
             return "В категории нет товаров."
+
         product_lines = []
         for product in self.__products:
             line = f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт."
@@ -132,3 +143,8 @@ class Category:
     def get_product_count(self) -> int:
         """Возвращает количество товаров в категории."""
         return len(self.__products)
+
+    @classmethod
+    def get_total_product_count(cls) -> int:
+        """Возвращает общее количество продуктов во всех категориях."""
+        return cls.product_counter

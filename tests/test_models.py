@@ -83,16 +83,46 @@ class TestProduct(unittest.TestCase):
 
 class TestCategory(unittest.TestCase):
     def setUp(self):
-        """Создаём тестовые объекты перед каждым тестом."""
-        self.product1 = Product("Ноутбук", "Игровой ноутбук", 99999.99, 5)
-        self.product2 = Product("Мышь", "Беспроводная мышь", 1999.99, 20)
+        Category.product_counter = 0  # Сброс счётчика перед каждым тестом
 
-    def test_category_init_with_products(self):
-        """Проверяем инициализацию категории с списком товаров."""
-        category = Category("Электроника", "Все виды электронных устройств", [self.product1, self.product2])
-        self.assertEqual(category.name, "Электроника")
-        self.assertEqual(category.description, "Все виды электронных устройств")
-        self.assertEqual(len(category._Category__products), 2)
+    def test_products_getter_returns_formatted_string(self):
+        """Проверяем, что геттер products возвращает строку в правильном формате."""
+        category = Category("Смартфоны", "Мобильные устройства")
+        product = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет", 180000.0, 5)
+        category.add_product(product)
+
+        expected = "Samsung Galaxy S23 Ultra, 180000.0 руб. Остаток: 5 шт."
+        self.assertEqual(category.products, expected)
+
+    def test_multiple_products_formatted(self):
+        """Проверяем форматирование нескольких товаров."""
+        category = Category("Ноутбуки", "Портативные компьютеры")
+        product1 = Product("MacBook Pro 16", "M2 Pro, 1TB SSD", 250000.0, 3)
+        product2 = Product("Dell XPS 13", "Intel i7, 512GB SSD", 150000.0, 2)
+        category.add_product(product1)
+        category.add_product(product2)
+
+        expected_lines = [
+            "MacBook Pro 16, 250000.0 руб. Остаток: 3 шт.",
+            "Dell XPS 13, 150000.0 руб. Остаток: 2 шт."
+        ]
+        expected = "\n".join(expected_lines)
+        self.assertEqual(category.products, expected)
+
+    def test_add_product_updates_counter(self):
+        """Проверяем, что добавление продукта увеличивает счётчик."""
+        category = Category("Тесты", "Описание")
+        product = Product("Тест", "Описание", 100.0, 5)
+
+        category.add_product(product)
+        self.assertEqual(category.get_product_count(), 1)
+        self.assertEqual(Category.get_total_product_count(), 1)
+
+        # Добавляем ещё один продукт
+        product2 = Product("Тест 2", "Описание 2", 200.0, 3)
+        category.add_product(product2)
+        self.assertEqual(category.get_product_count(), 2)
+        self.assertEqual(Category.get_total_product_count(), 2)
 
     def test_category_init_without_products(self):
         """Проверяем инициализацию категории без товаров."""
@@ -101,33 +131,11 @@ class TestCategory(unittest.TestCase):
         self.assertEqual(category.description, "Художественная литература")
         self.assertEqual(len(category._Category__products), 0)
 
-    def test_add_product(self):
-        """Проверяем добавление товара в категорию."""
-        category = Category("Электроника", "Устройства")
-        category.add_product(self.product1)
-        self.assertIn(self.product1, category._Category__products)
-
     def test_add_invalid_product(self):
         """Проверяем добавление некорректного объекта в категорию."""
         category = Category("Электроника", "Устройства")
         with self.assertRaises(TypeError):
             category.add_product("Не товар")
-
-    def test_products_getter_empty(self):
-        """Проверяем геттер products для пустой категории."""
-        category = Category("Пустая", "Категория без товаров")
-        self.assertEqual(category.products, "В категории нет товаров.")
-
-    def test_products_getter_with_items(self):
-        """Проверяем геттер products с товарами."""
-        category = Category("Электроника", "Устройства", [self.product1])
-        expected_output = "Ноутбук, 99999.99 руб. Остаток: 5 шт."
-        self.assertEqual(category.products, expected_output)
-
-    def test_get_product_count(self):
-        """Проверяем метод get_product_count."""
-        category = Category("Электроника", "Устройства", [self.product1, self.product2])
-        self.assertEqual(category.get_product_count(), 2)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,6 @@
 import json
 import os
 import unittest
-from unittest.mock import patch
 from src.data_load import load_data_from_json
 from src.models import Product, Category
 
@@ -71,17 +70,17 @@ class TestDataLoad(unittest.TestCase):
                 {
                     "name": "Смартфоны",
                     "description": "Мобильные устройства",
-            "products": [
-                    {
-                "name": "Samsung Galaxy S23 Ultra",
-                "description": "256GB, Серый цвет, 200MP камера",
-                "price": 180000.0,
-                "quantity": 5
-            }
-        ]
-    }
-]
-}
+                    "products": [
+                        {
+                            "name": "Samsung Galaxy S23 Ultra",
+                            "description": "256GB, Серый цвет, 200MP камера",
+                            "price": 180000.0,
+                            "quantity": 5
+                        }
+                    ]
+                }
+            ]
+        }
         self.create_test_file("test_products_old.json", data)
 
         categories = load_data_from_json("test_products_old.json")
@@ -144,17 +143,17 @@ class TestDataLoad(unittest.TestCase):
             "categories": [
                 {
                     "name": "Тесты",
-            "description": "Категория для тестирования",
-            "products": [
-                {"name": "Товар без полей"},  # Отсутствуют price, quantity, description
-                {
-                    "price": 1000.0,
-            "quantity": 5
-                }  # Отсутствуют name, description
+                    "description": "Категория для тестирования",
+                    "products": [
+                        {"name": "Товар без полей"},  # Отсутствуют price, quantity, description
+                        {
+                            "price": 1000.0,
+                            "quantity": 5
+                        }  # Отсутствуют name, description
+                    ]
+                }
             ]
         }
-    ]
-}
         self.create_test_file("test_missing_products.json", data)
 
         categories = load_data_from_json("test_missing_products.json")
@@ -168,30 +167,30 @@ class TestDataLoad(unittest.TestCase):
             "categories": [
                 {
                     "name": "Категория 1",
-            "description": "Описание 1",
-            "products": [
+                    "description": "Описание 1",
+                    "products": [
+                        {
+                            "name": "Товар 1",
+                            "price": 100.0,
+                            "quantity": 1,
+                            "description": "Описание товара 1"
+                        }
+                    ]
+                },
                 {
-                    "name": "Товар 1",
-            "price": 100.0,
-            "quantity": 1,
-            "description": "Описание товара 1"
-                }
-            ]
-        },
-        {
-            "name": "Категория 2",
-            "description": "Описание 2",
-            "products": [
-                {
-                    "name": "Товар 2",
-            "price": 200.0,
-            "quantity": 2,
-            "description": "Описание товара 2"
+                    "name": "Категория 2",
+                    "description": "Описание 2",
+                    "products": [
+                        {
+                            "name": "Товар 2",
+                            "price": 200.0,
+                            "quantity": 2,
+                            "description": "Описание товара 2"
+                        }
+                    ]
                 }
             ]
         }
-    ]
-}
         self.create_test_file("test_multiple.json", data)
 
         categories = load_data_from_json("test_multiple.json")
@@ -242,4 +241,3 @@ class TestDataLoad(unittest.TestCase):
             self.assertEqual(product2.name, "Цена как строка")
             self.assertEqual(product2.price, 2000.50)  # Должно быть преобразовано в float
             self.assertIsInstance(product2.price, float)
-
