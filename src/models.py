@@ -100,6 +100,32 @@ class Product:
                 quantity=product_data['quantity']
             )
 
+    def __str__(self) -> str:
+        """
+        Возвращает строковое представление товара в формате:
+        "Название продукта, X руб. Остаток: X шт."
+        """
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __add__(self, other):
+        """
+        Магический метод сложения. Возвращает сумму произведений цены на количество
+        у двух объектов Product.
+
+        Args:
+            other (Product): второй объект Product для сложения.
+
+        Returns:
+            float: сумма (self.price * self.quantity) + (other.price * other.quantity).
+
+        Raises:
+            TypeError: если other не является объектом класса Product.
+        """
+        if not isinstance(other, Product):
+            raise TypeError(f"Можно складывать только объекты класса Product, а не {type(other).__name__}")
+
+        return (self.price * self.quantity) + (other.price * other.quantity)
+
 
 class Category:
     # Класс‑атрибут: счётчик всех продуктов во всех категориях
@@ -144,7 +170,22 @@ class Category:
         """Возвращает количество товаров в категории."""
         return len(self.__products)
 
+    def get_total_quantity_in_stock(self) -> int:
+        """
+        Возвращает общее количество товаров на складе (сумма quantity всех продуктов в категории).
+        """
+        return sum(product.quantity for product in self.__products)
+
     @classmethod
     def get_total_product_count(cls) -> int:
         """Возвращает общее количество продуктов во всех категориях."""
         return cls.product_counter
+
+    def __str__(self) -> str:
+        """
+        Возвращает строковое представление категории в формате:
+        "Название категории, количество продуктов: X шт."
+        где X — общее количество товаров на складе (сумма quantity всех продуктов).
+        """
+        total_quantity = self.get_total_quantity_in_stock()
+        return f"{self.name}, количество продуктов: {total_quantity} шт."

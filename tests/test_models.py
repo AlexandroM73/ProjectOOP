@@ -80,6 +80,68 @@ class TestProduct(unittest.TestCase):
         product = Product("Смартфон", "Описание", 50000, 10)
         assert isinstance(product.quantity, int)
 
+    def test_product_str_representation(self):
+        """Проверяем строковое представление объекта Product."""
+        expected = "Смартфон, 49999.99 руб. Остаток: 10 шт."
+        self.assertEqual(str(self.product), expected)
+
+    def test_product_str_zero_quantity(self):
+        """Проверяем строковое представление при нулевом остатке."""
+        product = Product("Ноутбук", "Игровой ноутбук", 89999.0, 0)
+        expected = "Ноутбук, 89999.0 руб. Остаток: 0 шт."
+        self.assertEqual(str(product), expected)
+
+    def test_product_str_low_price(self):
+        """Проверяем строковое представление с низкой ценой."""
+        product = Product("Наушники", "Беспроводные наушники", 2999.5, 25)
+        expected = "Наушники, 2999.5 руб. Остаток: 25 шт."
+        self.assertEqual(str(product), expected)
+
+    def test_product_add_basic(self):
+        """Проверяем базовое сложение двух товаров."""
+        product1 = Product("Смартфон", "Описание", 50000.0, 2)
+        product2 = Product("Наушники", "Описание", 5000.0, 3)
+
+        result = product1 + product2
+        expected = (50000.0 * 2) + (5000.0 * 3)  # 100 000 + 15 000 = 115 000
+        self.assertEqual(result, expected)
+
+    def test_product_add_zero_quantity(self):
+        """Проверяем сложение с товаром с нулевым количеством."""
+        product1 = Product("Смартфон", "Описание", 50000.0, 0)
+        product2 = Product("Ноутбук", "Описание", 100000.0, 2)
+
+        result = product1 + product2
+        expected = (50000.0 * 0) + (100000.0 * 2)  # 0 + 200 000 = 200 000
+        self.assertEqual(result, expected)
+
+    def test_product_add_same_product(self):
+        """Проверяем сложение одинаковых товаров."""
+        product1 = Product("Книга", "Художественная", 1000.0, 5)
+        product2 = Product("Книга", "Научная", 2000.0, 3)
+
+        result = product1 + product2
+        expected = (1000.0 * 5) + (2000.0 * 3)  # 5 000 + 6 000 = 11 000
+        self.assertEqual(result, expected)
+
+    def test_product_add_with_low_price(self):
+        """Проверяем сложение с товаром с очень низкой ценой."""
+        product1 = Product("Товар 1", "Описание", 0.01, 10)
+        product2 = Product("Товар 2", "Описание", 5000.0, 4)
+
+        result = product1 + product2
+        expected = (0.01 * 10) + (5000.0 * 4)  # 0.1 + 20 000 = 20 000.1
+        self.assertEqual(result, expected)
+
+    def test_product_add_invalid_type(self):
+        """Проверяем обработку сложения с некорректным типом."""
+        product = Product("Смартфон", "Описание", 50000.0, 2)
+
+        with self.assertRaises(TypeError) as context:
+            product + "не товар"
+
+        self.assertIn("Можно складывать только объекты класса Product", str(context.exception))
+
 
 class TestCategory(unittest.TestCase):
     def setUp(self):
@@ -136,6 +198,57 @@ class TestCategory(unittest.TestCase):
         category = Category("Электроника", "Устройства")
         with self.assertRaises(TypeError):
             category.add_product("Не товар")
+
+    def test_category_str_empty(self):
+        """Проверяем строковое представление пустой категории."""
+        category = Category("Электроника", "Все электронные товары")
+        expected = "Электроника, количество продуктов: 0 шт."
+        self.assertEqual(str(category), expected)
+
+    def test_category_str_single_product(self):
+        """Проверяем строковое представление категории с одним товаром."""
+        category = Category("Смартфоны", "Мобильные устройства")
+        product = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет", 180000.0, 5)
+        category.add_product(product)
+        expected = "Смартфоны, количество продуктов: 5 шт."
+        self.assertEqual(str(category), expected)
+
+    def test_category_str_multiple_products(self):
+        """Проверяем категорию с несколькими товарами."""
+        category = Category("Ноутбуки", "Портативные компьютеры")
+        product1 = Product("MacBook Pro 16", "M2 Pro, 1TB SSD", 250000.0, 3)
+        product2 = Product("Dell XPS 13", "Intel i7, 512GB SSD", 150000.0, 2)
+        category.add_product(product1)
+        category.add_product(product2)
+        expected = "Ноутбуки, количество продуктов: 5 шт."  # 3 + 2 = 5
+        self.assertEqual(str(category), expected)
+
+    def test_category_str_after_adding_products(self):
+        """Проверяем, что строковое представление обновляется после добавления товаров."""
+        category = Category("Книги", "Литературные произведения")
+
+        # До добавления товаров
+        self.assertEqual(str(category), "Книги, количество продуктов: 0 шт.")
+
+        # Добавляем первый товар
+        product1 = Product("1984", "Джордж Оруэлл", 599.0, 10)
+        category.add_product(product1)
+        self.assertEqual(str(category), "Книги, количество продуктов: 10 шт.")
+
+        # Добавляем второй товар
+        product2 = Product("Мастер и Маргарита", "Михаил Булгаков", 799.0, 8)
+        category.add_product(product2)
+        self.assertEqual(str(category), "Книги, количество продуктов: 18 шт.")  # 10 + 8 = 18
+
+    def test_category_str_with_zero_quantity_products(self):
+        """Проверяем категорию, где у товаров нулевой остаток."""
+        category = Category("Распродажи", "Товары со скидками")
+        product1 = Product("Мышь беспроводная", "Оптическая", 999.0, 0)
+        product2 = Product("Клавиатура механическая", "RGB подсветка", 2999.0, 0)
+        category.add_product(product1)
+        category.add_product(product2)
+        expected = "Распродажи, количество продуктов: 0 шт."  # 0 + 0 = 0
+        self.assertEqual(str(category), expected)
 
 
 if __name__ == '__main__':
