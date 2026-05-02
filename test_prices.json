@@ -1,1 +1,0 @@
-{"categories": [{"name": "Цены", "description": "Тестирование типов цен", "products": [{"name": "Цена как int", "price": 1000, "quantity": 1, "description": "Тест"}, {"name": "Цена как строка", "price": "2000.50", "quantity": 1, "description": "Тест"}]}]}
