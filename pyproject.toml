@@ -2,11 +2,9 @@
 requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
 build-backend = "setuptools.build_meta"
 
-
 [tool.black]
 line-length = 119
 target-version = ['py38']
-
 
 [tool.isort]
 profile = "black"
@@ -19,7 +17,18 @@ use_parentheses = true
 max-line-length = 119
 extend-ignore = ["E203", "W503"]
 
-
-[tool.pytest.ini-options]
+[tool.pytest.ini_options]
+# Пути для импорта модулей
+python_paths = ["src"]
+# Папки с тестами
 testpaths = ["tests"]
+# Игнорировать папки
+addopts = "--ignore=tests/legacy --ignore=docs"
+# Включить цветную подсветку
+color = "yes"
+# Verbose output
+verbose = 1
 
+[project]
+name = "my-project"
+version = "0.1.0"

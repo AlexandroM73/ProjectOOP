@@ -109,22 +109,97 @@ class Product:
 
     def __add__(self, other):
         """
-        Магический метод сложения. Возвращает сумму произведений цены на количество
-        у двух объектов Product.
+        Сложение товаров: суммирует стоимость (цена × количество) двух товаров.
+        Разрешено только для объектов одного класса.
 
         Args:
-            other (Product): второй объект Product для сложения.
+            other (Product): другой товар для сложения.
 
         Returns:
-            float: сумма (self.price * self.quantity) + (other.price * other.quantity).
+            float: общая стоимость двух товаров.
 
         Raises:
-            TypeError: если other не является объектом класса Product.
+            TypeError: если товары принадлежат к разным классам.
         """
         if not isinstance(other, Product):
-            raise TypeError(f"Можно складывать только объекты класса Product, а не {type(other).__name__}")
+            raise TypeError("Можно складывать только объекты класса Product и его наследников")
 
-        return (self.price * self.quantity) + (other.price * other.quantity)
+        if type(self) is not type(other):
+            raise TypeError(
+                f"Нельзя складывать товары разных типов: "
+                f"{type(self).__name__} и {type(other).__name__}"
+            )
+
+        return self.price * self.quantity + other.price * other.quantity
+
+    def apply_discount(self, discount_percent: float) -> None:
+        """Применяет скидку к цене товара."""
+        if 0 <= discount_percent <= 100:
+            new_price = self.price * (1 - discount_percent / 100)
+            self.price = new_price
+        else:
+            logging.warning("Процент скидки должен быть от 0 до 100")
+
+    def is_in_stock(self) -> bool:
+        """Проверяет, есть ли товар в наличии."""
+        return self.quantity > 0
+
+
+class Smartphone(Product):
+    def __init__(self, name: str, description: str, price: float, quantity: int,
+                 efficiency: str, model: str, memory: str, color: str):
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+    def get_memory_in_gb(self) -> int:
+        """Возвращает объём памяти в ГБ."""
+        import re
+        numbers = re.findall(r'\d+', self.memory)
+        return int(numbers[0]) if numbers else 0
+
+    def is_high_performance(self) -> bool:
+        """Проверяет, является ли смартфон высокопроизводительным."""
+        high_eff = ['высокая', 'high', 'premium', 'top']
+        return any(word in self.efficiency.lower() for word in high_eff)
+
+    def __str__(self) -> str:
+        base_info = super().__str__()
+        return (f"{base_info} | Модель: {self.model}, "
+                f"Память: {self.memory}, Цвет: {self.color}, "
+                f"Производительность: {self.efficiency}")
+
+
+class LawnGrass(Product):
+    def __init__(self, name: str, description: str, price: float, quantity: int,
+                 country: str, germination_period: str, color: str):
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
+
+    def get_germination_days(self) -> tuple:
+        """Извлекает минимальный и максимальный срок прорастания в днях."""
+        import re
+        numbers = re.findall(r'\d+', self.germination_period)
+        if len(numbers) == 2:
+            return int(numbers[0]), int(numbers[1])
+        elif len(numbers) == 1:
+            return int(numbers[0]), int(numbers[0])
+        else:
+            return 0, 0
+
+    def is_fast_germinating(self) -> bool:
+        """Проверяет, быстро ли прорастает трава (менее 10 дней)."""
+        min_days, _ = self.get_germination_days()
+        return min_days < 10
+
+    def __str__(self) -> str:
+        base_info = super().__str__()
+        return (f"{base_info} | Страна: {self.country}, "
+                f"Срок прорастания: {self.germination_period}, Цвет: {self.color}")
 
 
 class Category:
@@ -140,14 +215,24 @@ class Category:
             for product in products:
                 self.add_product(product)
 
-    def add_product(self, product: Product):
-        """Добавляет продукт в категорию и обновляет счётчики."""
-        if isinstance(product, Product):
-            self.__products.append(product)
-            # Увеличиваем глобальный счётчик на 1
-            Category.product_counter += 1
-        else:
-            raise TypeError("Можно добавлять только объекты класса Product")
+    def add_product(self, product) -> None:
+        """
+        Добавляет продукт в категорию и обновляет счётчики.
+
+        Args:
+            product (Product): объект товара для добавления.
+
+        Raises:
+            TypeError: если переданный объект не является экземпляром Product или его наследником.
+        """
+        if not isinstance(product, Product):
+            raise TypeError(
+                f"Можно добавлять только объекты класса Product или его наследников. "
+                f"Переданный объект: {type(product).__name__}"
+            )
+
+        self.__products.append(product)
+        Category.product_counter += 1
 
     @property
     def products(self) -> str:
@@ -181,6 +266,132 @@ class Category:
         """Возвращает общее количество продуктов во всех категориях."""
         return cls.product_counter
 
+    def find_products_by_name(self, search_term: str) -> list:
+        """Находит товары по части названия."""
+        return [p for p in self.__products if search_term.lower() in p.name.lower()]
+
+    def get_total_cost(self) -> float:
+        """Возвращает общую стоимость всех товаров в категории (цена × количество)."""
+        return sum(p.price * p.quantity for p in self.__products)
+
+    def remove_product(self, product_name: str) -> bool:
+        """
+        Удаляет товар из категории по названию.
+
+        Args:
+            product_name (str): название товара для удаления.
+
+        Returns:
+            bool: True, если товар был найден и удалён, False — если не найден.
+        """
+        initial_count = len(self.__products)
+        self.__products = [p for p in self.__products if p.name != product_name]
+        removed_count = initial_count - len(self.__products)
+
+        if removed_count > 0:
+            # Обновляем глобальный счётчик
+            Category.product_counter -= removed_count
+            return True
+        return False
+
+    def update_product_quantity(self, product_name: str, new_quantity: int) -> bool:
+        """
+        Обновляет количество товара в категории.
+
+        Args:
+            product_name (str): название товара.
+            new_quantity (int): новое количество.
+
+        Returns:
+            bool: True, если товар найден и количество обновлено, False — если товар не найден.
+        """
+        for product in self.__products:
+            if product.name == product_name:
+                if new_quantity >= 0:
+                    product.quantity = new_quantity
+            else:
+                logging.warning("Количество не может быть отрицательным")
+            return True
+        return False
+
+    def get_products_by_availability(self, in_stock: bool = True) -> list:
+        """
+        Возвращает товары по наличию на складе.
+
+        Args:
+            in_stock (bool): если True — возвращает товары в наличии,
+                              если False — товары с нулевым количеством.
+
+        Returns:
+            list: список подходящих товаров.
+        """
+        if in_stock:
+            return [p for p in self.__products if p.is_in_stock()]
+        else:
+            return [p for p in self.__products if not p.is_in_stock()]
+
+    def clear_empty_products(self) -> int:
+        """
+        Удаляет из категории все товары с нулевым количеством.
+
+        Returns:
+            int: количество удалённых товаров.
+        """
+        initial_count = len(self.__products)
+        self.__products = [p for p in self.__products if p.quantity > 0]
+        removed_count = initial_count - len(self.__products)
+
+        # Обновляем глобальный счётчик
+        Category.product_counter -= removed_count
+        return removed_count
+
+    def apply_discount_to_all(self, discount_percent: float) -> None:
+        """
+        Применяет скидку ко всем товарам в категории.
+
+        Args:
+            discount_percent (float): процент скидки (0–100).
+        """
+        for product in self.__products:
+            product.apply_discount(discount_percent)
+
+    def get_average_price(self) -> float:
+        """
+        Возвращает среднюю цену товаров в категории.
+
+        Returns:
+            float: средняя цена или 0, если товаров нет.
+        """
+        if not self.__products:
+            return 0.0
+        total_price = sum(p.price for p in self.__products)
+        return total_price / len(self.__products)
+
+    def get_statistics(self) -> dict:
+        """
+        Возвращает статистику по категории.
+
+        Returns:
+            dict: словарь с статистикой:
+                - total_products: общее количество товаров;
+                - total_quantity: общее количество на складе;
+                - total_cost: общая стоимость;
+                - average_price: средняя цена;
+                - in_stock_count: количество товаров в наличии;
+                - out_of_stock_count: количество отсутствующих товаров.
+        """
+        in_stock = self.get_products_by_availability(in_stock=True)
+        out_of_stock = self.get_products_by_availability(in_stock=False)
+
+        return {
+            "total_products": self.get_product_count(),
+            "total_quantity": self.get_total_quantity_in_stock(),
+            "total_cost": self.get_total_cost(),
+            "average_price": self.get_average_price(),
+            "in_stock_count": len(in_stock),
+            "out_of_stock_count": len(out_of_stock)
+        }
+
     def __str__(self) -> str:
         """
         Возвращает строковое представление категории в формате:
@@ -189,3 +400,11 @@ class Category:
         """
         total_quantity = self.get_total_quantity_in_stock()
         return f"{self.name}, количество продуктов: {total_quantity} шт."
+
+    def __len__(self) -> int:
+        """Позволяет использовать len() для получения количества товаров в категории."""
+        return self.get_product_count()
+
+    def __contains__(self, product_name: str) -> bool:
+        """Позволяет использовать оператор 'in' для проверки наличия товара."""
+        return any(p.name == product_name for p in self.__products)

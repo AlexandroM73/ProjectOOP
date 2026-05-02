@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch
-
-from src.models import Product, Category
+from src.models import Product, Category, Smartphone, LawnGrass
 
 
 class TestProduct(unittest.TestCase):
@@ -142,6 +141,56 @@ class TestProduct(unittest.TestCase):
 
         self.assertIn("Можно складывать только объекты класса Product", str(context.exception))
 
+    def test_add_same_class_products(self):
+        """Тест сложения товаров одного класса (оба — Product)."""
+        product1 = Product("Товар 1", "Описание", 1000.0, 2)
+        product2 = Product("Товар 2", "Описание", 2000.0, 3)
+
+        total_cost = product1 + product2
+        expected_cost = (1000.0 * 2) + (2000.0 * 3)  # 2000 + 6000 = 8000
+        self.assertEqual(total_cost, expected_cost)
+
+    def test_add_different_class_products_raises_type_error(self):
+        """Тест: сложение товаров разных классов вызывает TypeError."""
+        smartphone = Smartphone(
+            "Galaxy S23", "Флагман", 79990, 2,
+            "высокая", "S23", "128 ГБ", "чёрный"
+        )
+        grass = LawnGrass(
+            "Зелёная трава", "Газонная", 1500, 10,
+            "Россия", "7–14 дней", "зелёный"
+        )
+
+        with self.assertRaises(TypeError) as context:
+            _ = smartphone + grass
+
+        self.assertIn(
+            "Нельзя складывать товары разных типов",
+            str(context.exception)
+        )
+        self.assertIn("Smartphone", str(context.exception))
+        self.assertIn("LawnGrass", str(context.exception))
+
+    def test_add_with_non_product_object_raises_type_error(self):
+        """Тест: сложение с не‑продуктовым объектом вызывает TypeError."""
+        with self.assertRaises(TypeError) as context:
+            _ = self.product + "не товар"
+
+        self.assertIn(
+            "Можно складывать только объекты класса Product",
+            str(context.exception)
+        )
+
+    def test_add_with_none_raises_type_error(self):
+        """Тест: сложение с None вызывает TypeError."""
+        with self.assertRaises(TypeError) as context:
+            _ = self.product + None
+
+        self.assertIn(
+            "Можно складывать только объекты класса Product",
+            str(context.exception)
+        )
+
 
 class TestCategory(unittest.TestCase):
     def setUp(self):
@@ -249,6 +298,112 @@ class TestCategory(unittest.TestCase):
         category.add_product(product2)
         expected = "Распродажи, количество продуктов: 0 шт."  # 0 + 0 = 0
         self.assertEqual(str(category), expected)
+
+    def test_add_valid_product_subclass(self):
+        """Тест добавления корректного продукта — наследника Product."""
+        category = Category("Смартфоны", "Мобильные устройства")
+        smartphone = Smartphone(
+            "Galaxy S23", "Флагман", 79990, 2,
+            "высокая", "S23", "128 ГБ", "чёрный"
+        )
+
+        initial_count = category.get_product_count()
+        category.add_product(smartphone)
+        final_count = category.get_product_count()
+
+        self.assertEqual(final_count, initial_count + 1)
+        self.assertIn(smartphone, category._Category__products)
+
+    def test_add_lawn_grass_to_category(self):
+        """Тест добавления газонной травы (наследника Product) в категорию."""
+        category = Category("Газонная трава", "Семена и трава")
+        grass = LawnGrass(
+            "Зелёная трава", "Газонная", 1500, 10,
+            "Россия", "7–14 дней", "зелёный"
+        )
+
+        initial_count = category.get_product_count()
+        category.add_product(grass)
+        final_count = category.get_product_count()
+
+        self.assertEqual(final_count, initial_count + 1)
+        self.assertIn(grass, category._Category__products)
+
+    def test_add_string_raises_type_error(self):
+        """Тест: добавление строки вызывает TypeError."""
+        category = Category("Электроника", "Устройства")
+
+        with self.assertRaises(TypeError) as context:
+            category.add_product("Не товар")
+
+        self.assertIn(
+            "Можно добавлять только объекты класса Product или его наследников",
+            str(context.exception)
+        )
+        self.assertIn("str", str(context.exception))
+
+    def test_add_integer_raises_type_error(self):
+        """Тест: добавление числа вызывает TypeError."""
+        category = Category("Электроника", "Устройства")
+
+        with self.assertRaises(TypeError) as context:
+            category.add_product(123)
+
+        self.assertIn(
+            "Можно добавлять только объекты класса Product или его наследников",
+            str(context.exception)
+        )
+        self.assertIn("int", str(context.exception))
+
+    def test_add_none_raises_type_error(self):
+        """Тест: добавление None вызывает TypeError."""
+        category = Category("Электроника", "Устройства")
+
+        with self.assertRaises(TypeError) as context:
+            category.add_product(None)
+
+        self.assertIn(
+            "Можно добавлять только объекты класса Product или его наследников",
+            str(context.exception)
+        )
+        self.assertIn("NoneType", str(context.exception))
+
+    def test_multiple_valid_additions(self):
+        """Тест последовательного добавления разных наследников Product."""
+        category = Category("Все товары", "Смешанная категория")
+
+        smartphone = Smartphone(
+            "Galaxy S23", "Флагман", 79990, 2,
+            "высокая", "S23", "128 ГБ", "чёрный"
+        )
+        grass = LawnGrass(
+            "Зелёная трава", "Газонная", 1500, 10,
+            "Россия", "7–14 дней", "зелёный"
+        )
+
+        # Добавляем смартфон
+        category.add_product(smartphone)
+        # Добавляем газонную траву
+        category.add_product(grass)
+
+        self.assertEqual(category.get_product_count(), 2)
+        self.assertIn(smartphone, category._Category__products)
+        self.assertIn(grass, category._Category__products)
+
+    def test_add_invalid_types_multiple(self):
+        """Тест обработки нескольких некорректных типов подряд."""
+        category = Category("Электроника", "Устройства")
+
+        invalid_objects = ["текст", 123, None, [], {}]
+
+        for obj in invalid_objects:
+            with self.subTest(obj_type=type(obj).__name__):
+                with self.assertRaises(TypeError) as context:
+                    category.add_product(obj)
+                self.assertIn(
+                    "Можно добавлять только объекты класса Product или его наследников",
+                    str(context.exception)
+                )
 
 
 if __name__ == '__main__':
