@@ -191,6 +191,42 @@ class TestProduct(unittest.TestCase):
             str(context.exception)
         )
 
+    def test_new_product_from_dict(self):
+        """Проверяем создание продукта из словаря."""
+        data = {
+            "name": "Смартфон",
+            "description": "Современный смартфон",
+            "price": 49999.99,
+            "quantity": 10
+        }
+        product = Product.new_product(data)
+        self.assertEqual(product.name, "Смартфон")
+        self.assertEqual(product.price, 49999.99)
+
+    def test_new_product_missing_keys(self):
+        """Проверяем обработку отсутствующих ключей."""
+        incomplete_data = {"name": "Смартфон", "description": "Описание"}
+        with self.assertRaises(KeyError) as context:
+            Product.new_product(incomplete_data)
+        self.assertIn("Отсутствуют обязательные ключи", str(context.exception))
+
+    def test_new_product_update_existing(self):
+        """Проверяем обновление существующего продукта."""
+        existing_product = Product("Смартфон", "Описание", 49999.99, 10)
+        existing_products = [existing_product]
+
+        update_data = {
+            "name": "Смартфон",
+            "description": "Обновлённое описание",
+            "price": 55000.00,
+            "quantity": 5
+        }
+
+        updated_product = Product.new_product(update_data, existing_products)
+        self.assertEqual(updated_product.quantity, 15)  # 10 + 5
+        self.assertEqual(updated_product.price, 55000.00)  # max(49999.99, 55000.00)
+        self.assertEqual(updated_product.description, "Обновлённое описание")
+
 
 class TestCategory(unittest.TestCase):
     def setUp(self):
@@ -298,6 +334,112 @@ class TestCategory(unittest.TestCase):
         category.add_product(product2)
         expected = "Распродажи, количество продуктов: 0 шт."  # 0 + 0 = 0
         self.assertEqual(str(category), expected)
+
+    def test_find_products_by_name_partial_match(self):
+        """Проверяем поиск товаров по части названия."""
+        category = Category("Смартфоны", "Мобильные устройства")
+        product1 = Product("Galaxy S23", "Флагман", 79990.0, 2)
+        product2 = Product("Galaxy Note 20", "Премиум", 69990.0, 3)
+        product3 = Product("iPhone 14", "Apple", 89990.0, 1)
+        category.add_product(product1)
+        category.add_product(product2)
+        category.add_product(product3)
+
+        found = category.find_products_by_name("Galaxy")
+        self.assertEqual(len(found), 2)
+        self.assertIn(product1, found)
+        self.assertIn(product2, found)
+
+    def test_find_products_by_name_no_results(self):
+        """Проверяем поиск, когда товары не найдены."""
+        category = Category("Ноутбуки", "Портативные компьютеры")
+        product = Product("MacBook Pro", "M2 Pro", 250000.0, 3)
+        category.add_product(product)
+
+        found = category.find_products_by_name("Dell")
+        self.assertEqual(len(found), 0)
+
+    def test_remove_product_success(self):
+        """Проверяем успешное удаление товара по названию."""
+        category = Category("Книги", "Художественная литература")
+        product = Product("1984", "Джордж Оруэлл", 599.0, 10)
+        category.add_product(product)
+
+        result = category.remove_product("1984")
+        self.assertTrue(result)
+        self.assertEqual(category.get_product_count(), 0)
+        self.assertEqual(Category.get_total_product_count(), 0)
+
+    def test_remove_product_not_found(self):
+        """Проверяем удаление несуществующего товара."""
+        category = Category("Электроника", "Устройства")
+        result = category.remove_product("Не существующий товар")
+        self.assertFalse(result)
+
+    def test_update_product_quantity_success(self):
+        """Проверяем обновление количества товара."""
+        category = Category("Наушники", "Аудиотехника")
+        product = Product("Беспроводные наушники", "Bluetooth", 2999.0, 5)
+        category.add_product(product)
+
+        result = category.update_product_quantity("Беспроводные наушники", 15)
+        self.assertTrue(result)
+        self.assertEqual(product.quantity, 15)
+
+    def test_get_products_by_availability_in_stock(self):
+        """Проверяем фильтрацию товаров в наличии."""
+        category = Category("Товары", "Все категории")
+        in_stock = Product("Смартфон", "Флагман", 79990.0, 2)
+        out_of_stock = Product("Старый телефон", "Устаревшая модель", 5000.0, 0)
+        category.add_product(in_stock)
+        category.add_product(out_of_stock)
+
+        available = category.get_products_by_availability(in_stock=True)
+        self.assertEqual(len(available), 1)
+        self.assertIn(in_stock, available)
+
+    def test_get_products_by_availability_out_of_stock(self):
+        """Проверяем фильтрацию отсутствующих товаров."""
+        category = Category("Товары", "Все категории")
+        in_stock = Product("Ноутбук", "Игровой", 89999.0, 3)
+        out_of_stock = Product("Мышь", "Беспроводная", 999.0, 0)
+        category.add_product(in_stock)
+        category.add_product(out_of_stock)
+
+        not_available = category.get_products_by_availability(in_stock=False)
+        self.assertEqual(len(not_available), 1)
+        self.assertIn(out_of_stock, not_available)
+
+    def test_clear_empty_products(self):
+        """Проверяем очистку пустых товаров."""
+        category = Category("Распродажа", "Товары со скидками")
+        available = Product("Клавиатура", "Механическая", 2999.0, 5)
+        empty = Product("Мышь", "Оптическая", 499.0, 0)
+        category.add_product(available)
+        category.add_product(empty)
+
+        removed_count = category.clear_empty_products()
+        self.assertEqual(removed_count, 1)
+        self.assertEqual(category.get_product_count(), 1)
+        self.assertNotIn(empty, category._Category__products)
+
+    def test_get_average_price_with_products(self):
+        """Проверяем расчёт средней цены при наличии товаров."""
+        category = Category("Электроника", "Устройства")
+        product1 = Product("Наушники", "Беспроводные", 2999.0, 5)
+        product2 = Product("Колонка", "Bluetooth", 4999.0, 3)
+        category.add_product(product1)
+        category.add_product(product2)
+
+        avg_price = category.get_average_price()
+        expected_avg = (2999.0 + 4999.0) / 2
+        self.assertEqual(avg_price, expected_avg)
+
+    def test_get_average_price_empty_category(self):
+        """Проверяем среднюю цену для пустой категории."""
+        category = Category("Пустая", "Нет товаров")
+        avg_price = category.get_average_price()
+        self.assertEqual(avg_price, 0.0)
 
     def test_add_valid_product_subclass(self):
         """Тест добавления корректного продукта — наследника Product."""
