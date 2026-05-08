@@ -215,6 +215,10 @@ class Category:
             for product in products:
                 self.add_product(product)
 
+    def get_product_objects(self):
+        """Возвращает список объектов товаров в категории"""
+        return self.__products
+
     def add_product(self, product) -> None:
         """
         Добавляет продукт в категорию и обновляет счётчики.

@@ -69,7 +69,11 @@ def main():
         # 7. Демонстрация магических методов
         print("\n--- МАГИЧЕСКИЕ МЕТОДЫ ---")
         print(f"Количество товаров в категории (len): {len(category)}")
-        sample_product_name = category.__products[0].name if category.__products else "Неизвестный товар"
+        if category.get_product_count() > 0:
+            sample_product = category.get_product_objects()[0]  # Получаем объект товара
+            sample_product_name = sample_product.name
+        else:
+            sample_product_name = "Неизвестный товар"
         is_in_category = sample_product_name in category
         print(f"Товар '{sample_product_name}' в категории (in): {is_in_category}")
 
@@ -89,23 +93,27 @@ def main():
 
         # 10. Обновление количества товара
         print("\n--- ОБНОВЛЕНИЕ КОЛИЧЕСТВА ТОВАРА ---")
-        if category.__products:
-            sample_product = category.__products[0]
+        if category.get_product_count() > 0:
+            sample_product = category.get_product_objects()[0]
             print(f"Обновляем количество для товара '{sample_product.name}'")
             print(f"Было: {sample_product.quantity} шт.")
             category.update_product_quantity(sample_product.name, sample_product.quantity + 5)
             print(f"Стало: {sample_product.quantity} шт.")
+        else:
+            print("В категории нет товаров для обновления.")
 
         # 11. Удаление товара (для демонстрации)
         print("\n--- УДАЛЕНИЕ ТОВАРА ---")
-        if category.__products:
-            product_to_remove = category.__products[0].name
+        if category.get_product_count() > 0:
+            product_to_remove = category.get_product_objects()[0].name
             print(f"Пытаемся удалить товар: {product_to_remove}")
             if category.remove_product(product_to_remove):
                 print("Товар успешно удалён")
             else:
                 print("Товар не найден для удаления")
             print(f"Осталось товаров в категории: {len(category)}")
+        else:
+            print("В категории нет товаров для удаления.")
 
     # Финальная проверка общего счётчика
     print("\n" + "=" * 50)
