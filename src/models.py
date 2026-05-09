@@ -203,17 +203,21 @@ class LawnGrass(Product):
 
 
 class Category:
-    # Класс‑атрибут: счётчик всех продуктов во всех категориях
-    product_counter = 0
+    category_count = 0  # счётчик категорий
+    product_count = 0  # счётчик всех продуктов во всех категориях
 
     def __init__(self, name: str, description: str, products: list = None):
         self.name = name
         self.description = description
         self.__products = []
 
+        # Увеличиваем счётчик категорий при создании нового объекта
+        Category.category_count += 1
+
+        # Обрабатываем передачу продуктов при инициализации
         if products is not None:
             for product in products:
-                self.add_product(product)
+                self.add_product(product)  # Используем add_product для корректного учёта
 
     def get_product_objects(self):
         """Возвращает список объектов товаров в категории"""
@@ -236,7 +240,7 @@ class Category:
             )
 
         self.__products.append(product)
-        Category.product_counter += 1
+        Category.product_count += 1  # Корректное увеличение счётчика продуктов
 
     @property
     def products(self) -> str:
@@ -268,7 +272,7 @@ class Category:
     @classmethod
     def get_total_product_count(cls) -> int:
         """Возвращает общее количество продуктов во всех категориях."""
-        return cls.product_counter
+        return cls.product_count
 
     def find_products_by_name(self, search_term: str) -> list:
         """Находит товары по части названия."""
@@ -294,7 +298,7 @@ class Category:
 
         if removed_count > 0:
             # Обновляем глобальный счётчик
-            Category.product_counter -= removed_count
+            Category.product_count -= removed_count
             return True
         return False
 
@@ -346,7 +350,7 @@ class Category:
         removed_count = initial_count - len(self.__products)
 
         # Обновляем глобальный счётчик
-        Category.product_counter -= removed_count
+        Category.product_count -= removed_count
         return removed_count
 
     def apply_discount_to_all(self, discount_percent: float) -> None:

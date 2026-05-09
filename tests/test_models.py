@@ -229,8 +229,17 @@ class TestProduct(unittest.TestCase):
 
 
 class TestCategory(unittest.TestCase):
+
+    @classmethod
+    def tearDownClass(cls):
+        """Сбрасываем счётчики после всех тестов."""
+        Category.category_count = 0
+        Category.product_count = 0
+
     def setUp(self):
-        Category.product_counter = 0  # Сброс счётчика перед каждым тестом
+        """Сбрасываем счётчики перед каждым тестом."""
+        Category.category_count = 0
+        Category.product_count = 0
 
     def test_products_getter_returns_formatted_string(self):
         """Проверяем, что геттер products возвращает строку в правильном формате."""
