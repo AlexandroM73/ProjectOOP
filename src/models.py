@@ -12,6 +12,12 @@ class Product:
         self.price = price
         self.quantity = int(quantity)
 
+        # проверка количества
+        if quantity <= 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+
+        self.quantity = int(quantity)
+
     @property
     def price(self) -> float:
         """Геттер для получения цены товара."""
@@ -219,6 +225,23 @@ class Category:
             for product in products:
                 self.add_product(product)  # Используем add_product для корректного учёта
 
+    # новый метод для расчёта средней цены
+    def get_average_price(self) -> float:
+        """
+        Возвращает среднюю цену товаров в категории.
+        Если товаров нет, возвращает 0.
+
+        Returns:
+            float: средняя цена или 0, если товаров нет.
+        """
+        try:
+            total_price = sum(product.price for product in self.__products)
+            average = total_price / len(self.__products)
+            return average
+        except ZeroDivisionError:
+            # Если товаров нет (len(self.__products) == 0), возвращаем 0
+            return 0.0
+
     def get_product_objects(self):
         """Возвращает список объектов товаров в категории"""
         return self.__products
@@ -322,21 +345,21 @@ class Category:
             return True
         return False
 
-    def get_products_by_availability(self, in_stock: bool = True) -> list:
+    def get_products_by_availability(self, in_stock: bool) -> list:
         """
-        Возвращает товары по наличию на складе.
+        Возвращает список товаров по доступности.
 
         Args:
-            in_stock (bool): если True — возвращает товары в наличии,
-                              если False — товары с нулевым количеством.
+            in_stock (bool): True — товары в наличии (quantity > 0),
+                             False — отсутствующие товары (quantity == 0).
 
         Returns:
-            list: список подходящих товаров.
+            list: отфильтрованный список продуктов.
         """
         if in_stock:
-            return [p for p in self.__products if p.is_in_stock()]
+            return [product for product in self.__products if product.quantity > 0]
         else:
-            return [p for p in self.__products if not p.is_in_stock()]
+            return [product for product in self.__products if product.quantity == 0]
 
     def clear_empty_products(self) -> int:
         """
@@ -363,17 +386,17 @@ class Category:
         for product in self.__products:
             product.apply_discount(discount_percent)
 
-    def get_average_price(self) -> float:
-        """
-        Возвращает среднюю цену товаров в категории.
-
-        Returns:
-            float: средняя цена или 0, если товаров нет.
-        """
-        if not self.__products:
-            return 0.0
-        total_price = sum(p.price for p in self.__products)
-        return total_price / len(self.__products)
+    # def get_average_price(self) -> float:
+    #     """
+    #     Возвращает среднюю цену товаров в категории.
+    #
+    #     Returns:
+    #         float: средняя цена или 0, если товаров нет.
+    #     """
+    #     if not self.__products:
+    #         return 0.0
+    #     total_price = sum(p.price for p in self.__products)
+    #     return total_price / len(self.__products)
 
     def get_statistics(self) -> dict:
         """

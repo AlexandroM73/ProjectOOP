@@ -86,8 +86,8 @@ class TestProduct(unittest.TestCase):
 
     def test_product_str_zero_quantity(self):
         """Проверяем строковое представление при нулевом остатке."""
-        product = Product("Ноутбук", "Игровой ноутбук", 89999.0, 0)
-        expected = "Ноутбук, 89999.0 руб. Остаток: 0 шт."
+        product = Product("Ноутбук", "Игровой ноутбук", 89999.0, 1)  # количество > 0
+        expected = "Ноутбук, 89999.0 руб. Остаток: 1 шт."
         self.assertEqual(str(product), expected)
 
     def test_product_str_low_price(self):
@@ -107,11 +107,11 @@ class TestProduct(unittest.TestCase):
 
     def test_product_add_zero_quantity(self):
         """Проверяем сложение с товаром с нулевым количеством."""
-        product1 = Product("Смартфон", "Описание", 50000.0, 0)
+        product1 = Product("Смартфон", "Описание", 50000.0, 2)
         product2 = Product("Ноутбук", "Описание", 100000.0, 2)
 
         result = product1 + product2
-        expected = (50000.0 * 0) + (100000.0 * 2)  # 0 + 200 000 = 200 000
+        expected = (50000.0 * 2) + (100000.0 * 2)  # 100 000 + 200 000 = 300 000
         self.assertEqual(result, expected)
 
     def test_product_add_same_product(self):
@@ -337,11 +337,11 @@ class TestCategory(unittest.TestCase):
     def test_category_str_with_zero_quantity_products(self):
         """Проверяем категорию, где у товаров нулевой остаток."""
         category = Category("Распродажи", "Товары со скидками")
-        product1 = Product("Мышь беспроводная", "Оптическая", 999.0, 0)
-        product2 = Product("Клавиатура механическая", "RGB подсветка", 2999.0, 0)
+        product1 = Product("Мышь беспроводная", "Оптическая", 999.0, 2)
+        product2 = Product("Клавиатура механическая", "RGB подсветка", 2999.0, 3)
         category.add_product(product1)
         category.add_product(product2)
-        expected = "Распродажи, количество продуктов: 0 шт."  # 0 + 0 = 0
+        expected = "Распродажи, количество продуктов: 5 шт."  # 2 + 3 = 5
         self.assertEqual(str(category), expected)
 
     def test_find_products_by_name_partial_match(self):
@@ -399,33 +399,50 @@ class TestCategory(unittest.TestCase):
         """Проверяем фильтрацию товаров в наличии."""
         category = Category("Товары", "Все категории")
         in_stock = Product("Смартфон", "Флагман", 79990.0, 2)
-        out_of_stock = Product("Старый телефон", "Устаревшая модель", 5000.0, 0)
+        # Создаём товар с положительным количеством, затем обнуляем
+        out_of_stock = Product("Старый телефон", "Устаревшая модель", 5000.0, 1)
+        out_of_stock.quantity = 0
         category.add_product(in_stock)
         category.add_product(out_of_stock)
 
         available = category.get_products_by_availability(in_stock=True)
         self.assertEqual(len(available), 1)
         self.assertIn(in_stock, available)
+        self.assertNotIn(out_of_stock, available)
 
     def test_get_products_by_availability_out_of_stock(self):
         """Проверяем фильтрацию отсутствующих товаров."""
         category = Category("Товары", "Все категории")
         in_stock = Product("Ноутбук", "Игровой", 89999.0, 3)
-        out_of_stock = Product("Мышь", "Беспроводная", 999.0, 0)
+        # Создаём товар с положительным количеством, затем обнуляем
+        out_of_stock = Product("Мышь", "Беспроводная", 999.0, 1)
+        out_of_stock.quantity = 0
         category.add_product(in_stock)
         category.add_product(out_of_stock)
 
         not_available = category.get_products_by_availability(in_stock=False)
         self.assertEqual(len(not_available), 1)
         self.assertIn(out_of_stock, not_available)
+        self.assertNotIn(in_stock, not_available)
+
+    def test_get_products_by_availability_empty_category(self):
+        """Проверяем работу метода для пустой категории."""
+        category = Category("Пустая", "Описание")
+
+        available = category.get_products_by_availability(in_stock=True)
+        not_available = category.get_products_by_availability(in_stock=False)
+
+        self.assertEqual(len(available), 0)
+        self.assertEqual(len(not_available), 0)
 
     def test_clear_empty_products(self):
         """Проверяем очистку пустых товаров."""
         category = Category("Распродажа", "Товары со скидками")
         available = Product("Клавиатура", "Механическая", 2999.0, 5)
-        empty = Product("Мышь", "Оптическая", 499.0, 0)
+        empty = Product("Мышь", "Оптическая", 499.0, 1)
         category.add_product(available)
         category.add_product(empty)
+        empty.quantity = 0  # обнуляем после создания
 
         removed_count = category.clear_empty_products()
         self.assertEqual(removed_count, 1)
@@ -555,6 +572,96 @@ class TestCategory(unittest.TestCase):
                     "Можно добавлять только объекты класса Product или его наследников",
                     str(context.exception)
                 )
+
+
+class TestProductInitialization(unittest.TestCase):
+    """Тесты для проверки инициализации товара."""
+
+    def test_product_with_zero_quantity_raises_error(self):
+        """Проверяем, что создание товара с нулевым количеством вызывает ValueError."""
+        with self.assertRaises(ValueError) as context:
+            Product("Тест", "Описание", 100.0, 0)
+        self.assertEqual(
+            str(context.exception),
+            "Товар с нулевым количеством не может быть добавлен"
+        )
+
+    def test_product_with_negative_quantity_raises_error(self):
+        """Проверяем, что создание товара с отрицательным количеством вызывает ValueError."""
+        with self.assertRaises(ValueError) as context:
+            Product("Тест", "Описание", 100.0, -5)
+        self.assertEqual(
+            str(context.exception),
+            "Товар с нулевым количеством не может быть добавлен"
+        )
+
+    def test_product_with_valid_quantity_success(self):
+        """Проверяем успешное создание товара с положительным количеством."""
+        product = Product("Тест", "Описание", 100.0, 5)
+        self.assertEqual(product.quantity, 5)
+
+
+class TestCategoryAveragePrice(unittest.TestCase):
+    """Тесты для метода get_average_price."""
+
+    def setUp(self):
+        """Сбрасываем счётчики перед каждым тестом."""
+        Category.category_count = 0
+        Category.product_count = 0
+
+    def test_average_price_with_products(self):
+        """Проверяем расчёт средней цены для категории с товарами."""
+        category = Category("Тесты", "Описание")
+        product1 = Product("Товар 1", "Описание 1", 100.0, 2)
+        product2 = Product("Товар 2", "Описание 2", 200.0, 3)
+        category.add_product(product1)
+        category.add_product(product2)
+
+        average = category.get_average_price()
+        self.assertEqual(average, 150.0)  # (100 + 200) / 2 = 150
+
+    def test_average_price_empty_category(self):
+        """Проверяем, что для пустой категории возвращается 0."""
+        category = Category("Пустая", "Описание")
+        average = category.get_average_price()
+        self.assertEqual(average, 0.0)
+
+    def test_average_price_single_product(self):
+        """Проверяем расчёт для категории с одним товаром."""
+        category = Category("Один товар", "Описание")
+        product = Product("Единственный", "Описание", 250.0, 1)
+        category.add_product(product)
+
+        average = category.get_average_price()
+        self.assertEqual(average, 250.0)
+
+
+class TestExistingFunctionality(unittest.TestCase):
+    """Тесты для проверки, что старые тесты проходят."""
+
+    def setUp(self):
+        Category.category_count = 0
+        Category.product_count = 0
+
+    def test_add_product_updates_counter(self):
+        """Проверяем, что добавление продукта увеличивает счётчик."""
+        category = Category("Тесты", "Описание")
+        product = Product("Тест", "Описание", 100.0, 5)
+
+        category.add_product(product)
+        self.assertEqual(category.get_product_count(), 1)
+        self.assertEqual(Category.get_total_product_count(), 1)
+
+    def test_remove_product_success(self):
+        """Проверяем успешное удаление товара по названию."""
+        category = Category("Книги", "Художественная литература")
+        product = Product("1984", "Джордж Оруэлл", 599.0, 10)
+        category.add_product(product)
+
+        result = category.remove_product("1984")
+        self.assertTrue(result)
+        self.assertEqual(category.get_product_count(), 0)
+        self.assertEqual(Category.get_total_product_count(), 0)
 
 
 if __name__ == '__main__':
