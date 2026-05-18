@@ -1,95 +1,126 @@
 from src.data_load import load_data_from_json
+from src.models import Category
+import logging
+
+# Настройка логирования для отображения предупреждений
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 
-class Product:
-    def __init__(self, name: str, description: str, price: float, quantity: int):
-        self.name = name
-        self.description = description
-        self.price = float(price)
-        self.quantity = int(quantity)
+def main():
+    print("Запуск демонстрационного кода...")
 
+    # Загрузка данных
+    categories = load_data_from_json("data/products.json")
 
-class Category:
-    # Атрибуты класса — общие для всех объектов
-    category_count = 0
-    product_count = 0
+    # Вывод результатов
+    print("\n=== ИТОГОВЫЕ СЧЁТЧИКИ ===")
+    print(f"Всего категорий: {len(categories)}")
 
-    def __init__(self, name: str, description: str, products: list):
-        # Атрибуты объекта — уникальные для каждого экземпляра
-        self.name = name
-        self.description = description
-        self.products = products
+    total_products = 0
+    for category in categories:
+        total_products += category.get_product_count()
 
-        # Автоматическое обновление атрибутов класса
-        Category.category_count += 1
-        Category.product_count += len(products)
+    print(f"Всего товаров: {total_products}")
+    print(f"Общий счётчик товаров во всех категориях: {Category.get_total_product_count()}")
+
+    for i, category in enumerate(categories, 1):
+        print("\n" + "=" * 50)
+        print(f"ДЕМОНСТРАЦИЯ ФУНКЦИЙ ДЛЯ КАТЕГОРИИ {i}: {category.name}")
+        print("=" * 50)
+        print(f"Описание: {category.description}")
+
+        # 1. Вывод товаров через геттер products
+        print("\n--- ТОВАРЫ В КАТЕГОРИИ ---")
+        print(category.products)
+
+        # 2. Статистика по категории
+        print("\n--- СТАТИСТИКА ПО КАТЕГОРИИ ---")
+        stats = category.get_statistics()
+        for key, value in stats.items():
+            # Улучшаем читаемость ключей: заменяем подчёркивания на пробелы и делаем заглавные буквы
+            readable_key = key.replace('_', ' ').title()
+            print(f"{readable_key}: {value}")
+
+        # 3. Средняя цена
+        print(f"\nСредняя цена товара: {category.get_average_price():.2f} руб.")
+
+        # 4. Общая стоимость категории
+        print(f"Общая стоимость товаров: {category.get_total_cost():.2f} руб.")
+
+        # 5. Поиск товаров по названию
+        print("\n--- ПОИСК ТОВАРОВ ---")
+        search_term = "Galaxy"  # Изменяем поисковый запрос на часть реального названия
+        found_products = category.find_products_by_name(search_term)
+        if found_products:
+            print(f"Найдено товаров по запросу '{search_term}': {len(found_products)}")
+            for product in found_products:
+                print(f"- {product.name}")
+        else:
+            print(f"Товаров по запросу '{search_term}' не найдено")
+
+        # 6. Товары в наличии и отсутствующие
+        print("\n--- НАЛИЧИЕ ТОВАРОВ ---")
+        in_stock = category.get_products_by_availability(in_stock=True)
+        out_of_stock = category.get_products_by_availability(in_stock=False)
+
+        print(f"В наличии: {len(in_stock)} товаров")
+        print(f"Нет в наличии: {len(out_of_stock)} товаров")
+
+        # 7. Демонстрация магических методов
+        print("\n--- МАГИЧЕСКИЕ МЕТОДЫ ---")
+        print(f"Количество товаров в категории (len): {len(category)}")
+        if category.get_product_count() > 0:
+            sample_product = category.get_product_objects()[0]  # Получаем объект товара
+            sample_product_name = sample_product.name
+        else:
+            sample_product_name = "Неизвестный товар"
+        is_in_category = sample_product_name in category
+        print(f"Товар '{sample_product_name}' в категории (in): {is_in_category}")
+
+        # 8. Применение скидки ко всем товарам
+        print("\n--- ПРИМЕНЕНИЕ СКИДКИ ---")
+        discount = 10  # 10% скидка
+        print(f"Применяем скидку {discount}% ко всем товарам категории...")
+        category.apply_discount_to_all(discount)
+        print("Цены после скидки:")
+        print(category.products)
+
+        # 9. Очистка отсутствующих товаров
+        print("\n--- ОЧИСТКА ОТСУТСТВУЮЩИХ ТОВАРОВ ---")
+        removed_count = category.clear_empty_products()
+        print(f"Удалено отсутствующих товаров: {removed_count}")
+        print(f"Осталось товаров в категории: {len(category)}")
+
+        # 10. Обновление количества товара
+        print("\n--- ОБНОВЛЕНИЕ КОЛИЧЕСТВА ТОВАРА ---")
+        if category.get_product_count() > 0:
+            sample_product = category.get_product_objects()[0]
+            print(f"Обновляем количество для товара '{sample_product.name}'")
+            print(f"Было: {sample_product.quantity} шт.")
+            category.update_product_quantity(sample_product.name, sample_product.quantity + 5)
+            print(f"Стало: {sample_product.quantity} шт.")
+        else:
+            print("В категории нет товаров для обновления.")
+
+        # 11. Удаление товара (для демонстрации)
+        print("\n--- УДАЛЕНИЕ ТОВАРА ---")
+        if category.get_product_count() > 0:
+            product_to_remove = category.get_product_objects()[0].name
+            print(f"Пытаемся удалить товар: {product_to_remove}")
+            if category.remove_product(product_to_remove):
+                print("Товар успешно удалён")
+            else:
+                print("Товар не найден для удаления")
+            print(f"Осталось товаров в категории: {len(category)}")
+        else:
+            print("В категории нет товаров для удаления.")
+
+    # Финальная проверка общего счётчика
+    print("\n" + "=" * 50)
+    print("ФИНАЛЬНАЯ ПРОВЕРКА ОБЩЕГО СЧЁТЧИКА ТОВАРОВ")
+    print("=" * 50)
+    print(f"Общий счётчик товаров во всех категориях: {Category.get_total_product_count()}")
 
 
 if __name__ == "__main__":
-    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
-    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
-    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
-
-    print(product1.name)
-    print(product1.description)
-    print(product1.price)
-    print(product1.quantity)
-
-    print(product2.name)
-    print(product2.description)
-    print(product2.price)
-    print(product2.quantity)
-
-    print(product3.name)
-    print(product3.description)
-    print(product3.price)
-    print(product3.quantity)
-
-    description = (
-        "Смартфоны, как средство не только коммуникации, "
-        "но и получения дополнительных функций для удобства жизни"
-    )
-    category1 = Category(
-        "Смартфоны",
-        description,
-        [product1, product2, product3]
-    )
-
-    print(category1.name == "Смартфоны")
-    print(category1.description)
-    print(len(category1.products))
-    print(category1.category_count)
-    print(category1.product_count)
-
-    product4 = Product("55\" QLED 4K", "Фоновая подсветка", 123000.0, 7)
-    category2 = Category("Телевизоры",
-                         "Современный телевизор, который позволяет наслаждаться просмотром, станет вашим другом и помощником",
-                         [product4])
-
-    print(category2.name)
-    print(category2.description)
-    print(len(category2.products))
-    print(category2.products)
-
-    print(Category.category_count)
-    print(Category.product_count)
-
-    # Загружаем данные из JSON
-    categories = load_data_from_json("data/products.json")
-
-    # Выводим информацию о загруженных данных
-    for category in categories:
-        print(f"\nКатегория: {category.name}")
-        print(f"Описание: {category.description}")
-        print(f"Количество товаров: {len(category.products)}")
-        print("Товары:")
-        for product in category.products:
-            print(f"  - {product.name}: "
-                  f"{product.price} руб., "
-                  f"{product.quantity} шт."
-                  )
-
-    # Проверяем счётчики
-    print(f"\n === ИТОГОВЫЕ СЧЁТЧИКИ ===")
-    print(f"Всего категорий: {Category.category_count}")
-    print(f"Всего товаров: {Category.product_count}")
+    main()
